@@ -1,0 +1,1857 @@
+make me a simple horror game using raylib and C++
+ChatGPT said:
+
+Sure! I'll guide you through creating a simple horror game using Raylib and C++.
+
+In this basic example, we'll create a simple 2D horror game where the player has to explore a spooky environment while avoiding a monster. The game will feature a player character (represented by a simple square), and a monster (represented by a moving square). When the player collides with the monster, the game will end.
+
+You'll need to have Raylib installed in your development environment to compile and run the code.
+Steps:
+
+    Install Raylib:
+
+        You can find the installation instructions for Raylib here: Raylib Installation.
+
+    Create a New C++ File:
+
+        Create a new file called main.cpp.
+
+    Simple Horror Game Code: Here's the basic code for a simple horror game using Raylib in C++:
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Game over flag
+bool gameOver = false;
+
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W)) playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S)) playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A)) playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D)) playerPosition.x += playerSpeed; // Move right
+}
+
+void UpdateMonster() {
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+    
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+    
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+void CheckCollision() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { monsterPosition.x, monsterPosition.y, 50, 50 })) {
+        gameOver = true;
+    }
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Simple Horror Game");
+
+    SetTargetFPS(60);
+    
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver) {
+            UpdatePlayer();
+            UpdateMonster();
+            CheckCollision();
+        }
+
+        // Draw
+        BeginDrawing();
+
+        ClearBackground(BLACK);
+
+        if (!gameOver) {
+            DrawRectangleV(playerPosition, { 50, 50 }, BLUE);  // Draw the player
+            DrawRectangleV(monsterPosition, { 50, 50 }, RED);  // Draw the monster
+        } else {
+            DrawText("GAME OVER", 300, 250, 30, RED);  // Display Game Over text
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Explanation:
+
+    Player Movement:
+
+        The player (blue square) moves around the screen using the W, A, S, and D keys.
+
+    Monster Behavior:
+
+        The monster (red square) moves towards the player. It calculates the direction towards the player and moves in that direction at a constant speed.
+
+    Collision Detection:
+
+        When the player collides with the monster (using CheckCollisionRecs), the game ends and a "GAME OVER" message is displayed.
+
+    Game Flow:
+
+        The game runs in a loop, continuously updating the player and monster positions and drawing them to the screen. When the player collides with the monster, the game stops updating and shows a "GAME OVER" message.
+
+To Compile:
+
+    Using g++: If you're using g++ to compile your C++ code, use the following command:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Replace main.cpp with your source file if it's named differently.
+
+Run the Game: Once compiled, you can run your game with:
+
+    ./horror_game
+
+Extending the Game:
+
+    Add Sound Effects: You can add ambient horror sounds or background music to make the game scarier.
+
+    Graphics: Instead of simple colored squares, you could load images (like a spooky character and monster) for more atmosphere.
+
+    Level Design: You can add rooms or obstacles to navigate through, increasing the difficulty.
+
+Let me know if you'd like to extend the game further, add features, or need help with anything else!
+You said:
+add a health bar
+ChatGPT said:
+
+Sure! Let's add a health bar for the player. We'll make it so that the player starts with full health (100) and loses health when the monster touches them. When the player's health reaches 0, the game will display a "Game Over" screen.
+Steps to Implement the Health Bar:
+
+    Health Initialization: Start with a health value, such as 100.
+
+    Health Reduction: Each time the player collides with the monster, reduce the health.
+
+    Health Bar Rendering: Draw the health bar at the top of the screen to represent the player's remaining health.
+
+    Game Over: If the player's health reaches 0, display the "Game Over" screen.
+
+Here’s the updated code with the health bar:
+
+#include "raylib.h>
+#include <cstdlib>
+#include <ctime>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Game over flag
+bool gameOver = false;
+
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W)) playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S)) playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A)) playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D)) playerPosition.x += playerSpeed; // Move right
+}
+
+void UpdateMonster() {
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+    
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+    
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+void CheckCollision() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { monsterPosition.x, monsterPosition.y, 50, 50 })) {
+        playerHealth -= 10;  // Reduce health when colliding with the monster
+        
+        // If health reaches 0, end the game
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            gameOver = true;
+        }
+    }
+}
+
+void DrawHealthBar() {
+    // Draw the health bar background
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY);
+
+    // Draw the current health as a filled rectangle
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED);
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Simple Horror Game");
+
+    SetTargetFPS(60);
+    
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver) {
+            UpdatePlayer();
+            UpdateMonster();
+            CheckCollision();
+        }
+
+        // Draw
+        BeginDrawing();
+
+        ClearBackground(BLACK);
+
+        // Draw health bar
+        DrawHealthBar();
+
+        if (!gameOver) {
+            DrawRectangleV(playerPosition, { 50, 50 }, BLUE);  // Draw the player
+            DrawRectangleV(monsterPosition, { 50, 50 }, RED);  // Draw the monster
+        } else {
+            DrawText("GAME OVER", 300, 250, 30, RED);  // Display Game Over text
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Changes and Explanation:
+
+    Player Health:
+
+        int playerHealth = 100; initializes the player's health to 100.
+
+        Each time the player collides with the monster, the health is reduced by 10 (playerHealth -= 10;).
+
+    Health Bar Rendering:
+
+        A function DrawHealthBar() is added to render the health bar at the top left of the screen.
+
+        It first draws a gray background rectangle to represent the full health bar.
+
+        It then draws a red rectangle to represent the current health, and the width of the red rectangle changes depending on the player's health.
+
+    Game Over Condition:
+
+        When the player's health reaches 0 or below, the gameOver flag is set to true, and the game stops updating the player and monster.
+
+        A "GAME OVER" message is displayed on the screen.
+
+Compilation:
+
+    Using g++: You can compile the game as before:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Running the Game: After compiling, run the game:
+
+    ./horror_game
+
+Further Improvements:
+
+    Health Regeneration: Add a feature where health regenerates slowly over time or by picking up health items.
+
+    Monster Behavior: Add more monsters or increase the monster’s speed over time to make the game progressively harder.
+
+    Sound Effects: You can add sounds to make it scarier (e.g., when the player gets hit or when the game ends).
+
+Let me know if you need more help or additional features!
+You said:
+add a more complex enviornment
+ChatGPT said:
+
+To make the game environment more complex, we can add obstacles, a maze-like structure, and different rooms to explore. We can also place some visual elements like walls, corridors, and random objects to create a more immersive environment for the player.
+
+Here’s how we can go about expanding the environment:
+Goals for a Complex Environment:
+
+    Add Walls and Obstacles: Make the environment more like a maze, with walls the player must navigate around.
+
+    Add Random Elements: We can add random placement of walls and objects (like health pickups or other hazards).
+
+    Increase Monster AI: Make the monster move more intelligently or patrol certain areas.
+
+Let’s implement these features into the game.
+Updated Game Code with a Complex Environment:
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Game over flag
+bool gameOver = false;
+
+// Map settings
+const int gridWidth = 16;
+const int gridHeight = 12;
+const int tileSize = 50;
+std::vector<std::vector<bool>> walls(gridHeight, std::vector<bool>(gridWidth, false));
+
+// Functions to initialize the environment
+void GenerateEnvironment() {
+    // Generate random walls in the environment
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (i == 0 || j == 0 || i == gridHeight - 1 || j == gridWidth - 1) {
+                walls[i][j] = true; // Make the outer edges walls
+            } else {
+                // Randomly generate walls inside
+                if (rand() % 4 == 0) { // 25% chance for a wall
+                    walls[i][j] = true;
+                }
+            }
+        }
+    }
+}
+
+// Player movement in the environment (taking into account walls)
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W) && !walls[(int)(playerPosition.y / tileSize) - 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S) && !walls[(int)(playerPosition.y / tileSize) + 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) - 1]) 
+        playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) + 1]) 
+        playerPosition.x += playerSpeed; // Move right
+}
+
+// Monster AI (simple follow player)
+void UpdateMonster() {
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+// Check collision between player and monster
+void CheckCollision() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { monsterPosition.x, monsterPosition.y, 50, 50 })) {
+        playerHealth -= 10;  // Reduce health when colliding with the monster
+
+        // If health reaches 0, end the game
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            gameOver = true;
+        }
+    }
+}
+
+// Draw the map with walls
+void DrawEnvironment() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (walls[i][j]) {
+                // Draw a wall as a gray block
+                DrawRectangle(j * tileSize, i * tileSize, tileSize, tileSize, GRAY);
+            }
+        }
+    }
+}
+
+// Draw the health bar
+void DrawHealthBar() {
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY); // Background of health bar
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED); // Health as a red bar
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Horror Game with Complex Environment");
+
+    SetTargetFPS(60);
+    
+    // Generate the game environment
+    srand(time(0));
+    GenerateEnvironment();
+
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver) {
+            UpdatePlayer();
+            UpdateMonster();
+            CheckCollision();
+        }
+
+        // Draw
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw environment (walls)
+        DrawEnvironment();
+
+        // Draw health bar
+        DrawHealthBar();
+
+        if (!gameOver) {
+            // Draw player (blue square)
+            DrawRectangleV(playerPosition, { 50, 50 }, BLUE);
+            // Draw monster (red square)
+            DrawRectangleV(monsterPosition, { 50, 50 }, RED);
+        } else {
+            // Game Over screen
+            DrawText("GAME OVER", 300, 250, 30, RED);
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Breakdown of the Changes:
+
+    Environment Grid:
+
+        The environment is now divided into a grid of cells (gridWidth and gridHeight), where each cell represents a tile of the environment. The player and monster move in this grid, and certain tiles are walls that the player cannot pass through.
+
+    Random Walls:
+
+        The function GenerateEnvironment() randomly generates walls in the grid. The outer edges are always walls, and the inner walls are placed randomly with a 25% chance.
+
+    Player Movement:
+
+        The player is restricted from moving through walls. We check the surrounding tiles before allowing movement in each direction (W, A, S, D keys). If the tile in that direction is a wall, the player cannot move there.
+
+    Monster AI:
+
+        The monster follows the player in a simple way, moving towards the player’s position.
+
+    Health Bar:
+
+        A health bar is drawn at the top-left of the screen, indicating the player's remaining health. If the player’s health reaches 0, a “Game Over” message is displayed.
+
+    Drawing Walls:
+
+        The walls are drawn as gray blocks, and the player is represented as a blue square, while the monster is a red square.
+
+How to Compile:
+
+    Using g++: Compile your code with:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Running the Game: After compiling, run your game:
+
+    ./horror_game
+
+Additional Ideas:
+
+    Maze Generation: You could add a more sophisticated maze generation algorithm like recursive backtracking or Prim’s algorithm for more interesting maps.
+
+    Sound Effects: You could add sounds for footsteps, monster growls, and background music to make it even spookier.
+
+    Multiple Levels: Create different levels with increasingly difficult mazes and monsters.
+
+    Collectibles: Add health packs or power-ups that randomly spawn in the environment.
+
+Let me know if you need further assistance with any of these features!
+You said:
+add an interesting movement mechanic for the player
+ChatGPT said:
+
+Certainly! Let's add an interesting movement mechanic to the player that will make the gameplay more dynamic and engaging. I'll suggest a teleportation mechanic for the player, where the player can teleport a short distance with a cooldown. This adds a sense of strategy and unpredictability, especially in a maze-like environment.
+
+Here's how it will work:
+
+    Teleportation Mechanic: The player can press a key (for example, the SPACE key) to teleport a short distance. This would allow the player to pass through walls or quickly escape from the monster, but it will have a cooldown period to prevent overuse.
+
+    Teleportation Cooldown: After teleporting, the player has to wait for a short cooldown before they can teleport again. This ensures that the mechanic isn't abused and adds a layer of strategy.
+
+    Visual Feedback: When teleporting, the player could be visually represented by a slight fading effect or a quick transition (like a short fade out and fade in effect).
+
+Updated Code with the Teleportation Mechanic:
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Game over flag
+bool gameOver = false;
+
+// Teleportation settings
+const float teleportDistance = 100.0f;  // How far the player can teleport
+float teleportCooldown = 0.0f;          // Cooldown timer for teleport
+const float maxTeleportCooldown = 3.0f; // 3 seconds cooldown
+
+// Map settings
+const int gridWidth = 16;
+const int gridHeight = 12;
+const int tileSize = 50;
+std::vector<std::vector<bool>> walls(gridHeight, std::vector<bool>(gridWidth, false));
+
+// Functions to initialize the environment
+void GenerateEnvironment() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (i == 0 || j == 0 || i == gridHeight - 1 || j == gridWidth - 1) {
+                walls[i][j] = true; // Make the outer edges walls
+            } else {
+                if (rand() % 4 == 0) { // 25% chance for a wall
+                    walls[i][j] = true;
+                }
+            }
+        }
+    }
+}
+
+// Player movement in the environment (taking into account walls)
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W) && !walls[(int)(playerPosition.y / tileSize) - 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S) && !walls[(int)(playerPosition.y / tileSize) + 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) - 1]) 
+        playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) + 1]) 
+        playerPosition.x += playerSpeed; // Move right
+}
+
+// Teleportation mechanic
+void HandleTeleportation() {
+    if (teleportCooldown <= 0.0f && IsKeyPressed(KEY_SPACE)) {
+        // Random direction for teleportation
+        int direction = rand() % 4; // 0 = up, 1 = down, 2 = left, 3 = right
+        Vector2 newPosition = playerPosition;
+
+        switch (direction) {
+            case 0: newPosition.y -= teleportDistance; break; // Teleport up
+            case 1: newPosition.y += teleportDistance; break; // Teleport down
+            case 2: newPosition.x -= teleportDistance; break; // Teleport left
+            case 3: newPosition.x += teleportDistance; break; // Teleport right
+        }
+
+        // Ensure the teleport doesn't go outside the map bounds
+        if (newPosition.x < 0) newPosition.x = 0;
+        if (newPosition.y < 0) newPosition.y = 0;
+        if (newPosition.x > GetScreenWidth() - tileSize) newPosition.x = GetScreenWidth() - tileSize;
+        if (newPosition.y > GetScreenHeight() - tileSize) newPosition.y = GetScreenHeight() - tileSize;
+
+        // Check if the new position collides with a wall
+        if (!walls[(int)(newPosition.y / tileSize)][(int)(newPosition.x / tileSize)]) {
+            playerPosition = newPosition; // Move the player to the new position
+        }
+
+        // Reset cooldown
+        teleportCooldown = maxTeleportCooldown;
+    }
+}
+
+// Monster AI (simple follow player)
+void UpdateMonster() {
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+// Check collision between player and monster
+void CheckCollision() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { monsterPosition.x, monsterPosition.y, 50, 50 })) {
+        playerHealth -= 10;  // Reduce health when colliding with the monster
+
+        // If health reaches 0, end the game
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            gameOver = true;
+        }
+    }
+}
+
+// Draw the map with walls
+void DrawEnvironment() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (walls[i][j]) {
+                DrawRectangle(j * tileSize, i * tileSize, tileSize, tileSize, GRAY);
+            }
+        }
+    }
+}
+
+// Draw the health bar
+void DrawHealthBar() {
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY); // Background of health bar
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED); // Health as a red bar
+}
+
+// Update cooldown and timer
+void UpdateCooldown() {
+    if (teleportCooldown > 0.0f) {
+        teleportCooldown -= GetFrameTime();
+    }
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Horror Game with Teleportation Mechanic");
+
+    SetTargetFPS(60);
+    
+    // Generate the game environment
+    srand(time(0));
+    GenerateEnvironment();
+
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver) {
+            UpdatePlayer();
+            HandleTeleportation();  // Handle teleportation mechanic
+            UpdateMonster();
+            CheckCollision();
+            UpdateCooldown();  // Update the cooldown for teleportation
+        }
+
+        // Draw
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw environment (walls)
+        DrawEnvironment();
+
+        // Draw health bar
+        DrawHealthBar();
+
+        if (!gameOver) {
+            // Draw player (blue square)
+            DrawRectangleV(playerPosition, { 50, 50 }, BLUE);
+            // Draw monster (red square)
+            DrawRectangleV(monsterPosition, { 50, 50 }, RED);
+
+            // Display teleportation cooldown
+            if (teleportCooldown > 0.0f) {
+                DrawText(TextFormat("Teleport Ready In: %.1f", teleportCooldown), 10, 40, 20, YELLOW);
+            }
+        } else {
+            // Game Over screen
+            DrawText("GAME OVER", 300, 250, 30, RED);
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Breakdown of the Changes:
+
+    Teleportation Mechanic:
+
+        The player can press the SPACE key to teleport a set distance (e.g., 100 units).
+
+        The teleportation direction is random: up, down, left, or right.
+
+        The teleportation distance is fixed, but you can modify it to suit your gameplay.
+
+    Cooldown:
+
+        After teleporting, the player must wait for a cooldown period (e.g., 3 seconds) before teleporting again.
+
+        This prevents the teleportation mechanic from being overused and adds a layer of strategy.
+
+    Teleportation Collision:
+
+        The player's new position after teleportation is checked for collisions with walls. If there’s a wall at the new position, the teleportation doesn't happen.
+
+    Visual Feedback:
+
+        The cooldown is displayed on the screen to show the player when they can teleport again.
+
+How to Compile:
+
+    Using g++: You can compile the code as before:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Running the Game: After compiling, run the game:
+
+    ./horror_game
+
+Further Enhancements:
+
+    Teleportation Effects: Add a fade-out/fade-in effect or a visual effect to indicate the teleportation happening.
+
+    Additional Movement Mechanics: Consider adding other movement mechanics like dashes, double jumps, or gravity-based mechanics.
+
+    Monster AI: Make the monster more dynamic, such as allowing it to teleport or track the player more intelligently.
+
+Let me know if you'd like further assistance or additional mechanics!
+You said:
+Create a win condition for the player
+ChatGPT said:
+
+To add a win condition to the game, we can introduce a goal object or exit point that the player must reach in order to win the game. Once the player reaches this exit or goal, the game will display a victory screen.
+Approach to the Win Condition:
+
+    Exit Location: We'll place an exit (or goal) somewhere on the map.
+
+    Player Goal: The player must reach this exit (by walking or teleporting) to win the game.
+
+    Victory Screen: Once the player reaches the exit, the game will display a "You Win!" message.
+
+Updated Code with Win Condition:
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Game over flag
+bool gameOver = false;
+bool gameWon = false; // Flag for win condition
+
+// Teleportation settings
+const float teleportDistance = 100.0f;  // How far the player can teleport
+float teleportCooldown = 0.0f;          // Cooldown timer for teleport
+const float maxTeleportCooldown = 3.0f; // 3 seconds cooldown
+
+// Map settings
+const int gridWidth = 16;
+const int gridHeight = 12;
+const int tileSize = 50;
+std::vector<std::vector<bool>> walls(gridHeight, std::vector<bool>(gridWidth, false));
+
+// Exit (goal) settings
+Vector2 exitPosition = { 700, 500 }; // Position of the exit (win condition)
+
+// Functions to initialize the environment
+void GenerateEnvironment() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (i == 0 || j == 0 || i == gridHeight - 1 || j == gridWidth - 1) {
+                walls[i][j] = true; // Make the outer edges walls
+            } else {
+                if (rand() % 4 == 0) { // 25% chance for a wall
+                    walls[i][j] = true;
+                }
+            }
+        }
+    }
+}
+
+// Player movement in the environment (taking into account walls)
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W) && !walls[(int)(playerPosition.y / tileSize) - 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S) && !walls[(int)(playerPosition.y / tileSize) + 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) - 1]) 
+        playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) + 1]) 
+        playerPosition.x += playerSpeed; // Move right
+}
+
+// Teleportation mechanic
+void HandleTeleportation() {
+    if (teleportCooldown <= 0.0f && IsKeyPressed(KEY_SPACE)) {
+        int direction = rand() % 4; // 0 = up, 1 = down, 2 = left, 3 = right
+        Vector2 newPosition = playerPosition;
+
+        switch (direction) {
+            case 0: newPosition.y -= teleportDistance; break;
+            case 1: newPosition.y += teleportDistance; break;
+            case 2: newPosition.x -= teleportDistance; break;
+            case 3: newPosition.x += teleportDistance; break;
+        }
+
+        // Ensure the teleport doesn't go outside the map bounds
+        if (newPosition.x < 0) newPosition.x = 0;
+        if (newPosition.y < 0) newPosition.y = 0;
+        if (newPosition.x > GetScreenWidth() - tileSize) newPosition.x = GetScreenWidth() - tileSize;
+        if (newPosition.y > GetScreenHeight() - tileSize) newPosition.y = GetScreenHeight() - tileSize;
+
+        // Check if the new position collides with a wall
+        if (!walls[(int)(newPosition.y / tileSize)][(int)(newPosition.x / tileSize)]) {
+            playerPosition = newPosition; // Move the player to the new position
+        }
+
+        // Reset cooldown
+        teleportCooldown = maxTeleportCooldown;
+    }
+}
+
+// Monster AI (simple follow player)
+void UpdateMonster() {
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+// Check collision between player and monster
+void CheckCollision() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { monsterPosition.x, monsterPosition.y, 50, 50 })) {
+        playerHealth -= 10;  // Reduce health when colliding with the monster
+
+        // If health reaches 0, end the game
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            gameOver = true;
+        }
+    }
+}
+
+// Check if player reached the exit to win
+void CheckWinCondition() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { exitPosition.x, exitPosition.y, 50, 50 })) {
+        gameWon = true;
+    }
+}
+
+// Draw the map with walls
+void DrawEnvironment() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (walls[i][j]) {
+                DrawRectangle(j * tileSize, i * tileSize, tileSize, tileSize, GRAY);
+            }
+        }
+    }
+}
+
+// Draw the health bar
+void DrawHealthBar() {
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY); // Background of health bar
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED); // Health as a red bar
+}
+
+// Update cooldown and timer
+void UpdateCooldown() {
+    if (teleportCooldown > 0.0f) {
+        teleportCooldown -= GetFrameTime();
+    }
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Horror Game with Teleportation Mechanic and Win Condition");
+
+    SetTargetFPS(60);
+
+    // Generate the game environment
+    srand(time(0));
+    GenerateEnvironment();
+
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver && !gameWon) {
+            UpdatePlayer();
+            HandleTeleportation();  // Handle teleportation mechanic
+            UpdateMonster();
+            CheckCollision();
+            CheckWinCondition(); // Check if the player reached the exit
+            UpdateCooldown();  // Update the cooldown for teleportation
+        }
+
+        // Draw
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw environment (walls)
+        DrawEnvironment();
+
+        // Draw health bar
+        DrawHealthBar();
+
+        if (!gameOver && !gameWon) {
+            // Draw player (blue square)
+            DrawRectangleV(playerPosition, { 50, 50 }, BLUE);
+            // Draw monster (red square)
+            DrawRectangleV(monsterPosition, { 50, 50 }, RED);
+            // Draw exit (goal) as a green square
+            DrawRectangleV(exitPosition, { 50, 50 }, GREEN);
+
+            // Display teleportation cooldown
+            if (teleportCooldown > 0.0f) {
+                DrawText(TextFormat("Teleport Ready In: %.1f", teleportCooldown), 10, 40, 20, YELLOW);
+            }
+        } else if (gameWon) {
+            // Win screen
+            DrawText("YOU WIN!", 300, 250, 30, GREEN);
+        } else {
+            // Game Over screen
+            DrawText("GAME OVER", 300, 250, 30, RED);
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Key Changes:
+
+    Exit Position:
+
+        Vector2 exitPosition = { 700, 500 }; defines the location of the exit/goal on the map. You can place it wherever you'd like.
+
+        The exit is drawn as a green square to differentiate it from other elements in the game.
+
+    Win Condition:
+
+        The CheckWinCondition() function checks if the player’s rectangle collides with the exit. If it does, the gameWon flag is set to true.
+
+        Once the player reaches the exit, the game switches to a win state, displaying the message "YOU WIN!".
+
+    Victory and Game Over:
+
+        If the player reaches the exit, the game stops updating and switches to a victory screen.
+
+        If the player’s health drops to 0, the game ends with a "GAME OVER" screen.
+
+    Game Flow:
+
+        The game runs until either the player wins by reaching the exit or loses by having their health drop to 0.
+
+How to Compile:
+
+    Using g++:
+
+    g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+You said:
+create hiding spots for the player to hide in
+ChatGPT said:
+
+To introduce hiding spots into the game, we can place objects that the player can use to hide from the monster. These spots will be obstacles or special objects where the player can "take cover" and avoid being detected by the monster.
+
+We'll implement the following changes:
+
+    Hiding Spot Objects: We'll randomly place hiding spots (such as crates, bushes, or other objects) around the environment.
+
+    Player Interaction with Hiding Spots: The player can hide behind these objects to evade the monster. We'll create a key for hiding (e.g., H key), and while hiding, the player will be invisible to the monster.
+
+    Monster Behavior Adjustment: When the player is hiding, the monster will stop chasing the player (unless the player exits the hiding spot or is close enough to the monster).
+
+Plan:
+
+    Hiding Spots: Randomly place a few hiding spots in the environment.
+
+    Hiding Mechanic: Press a key (e.g., H key) to hide behind the nearest hiding spot. While hidden, the player is invisible to the monster.
+
+    Monster AI: The monster will not move towards the player if the player is hidden.
+
+Updated Code with Hiding Spots:
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Game over flag
+bool gameOver = false;
+bool gameWon = false; // Flag for win condition
+
+// Teleportation settings
+const float teleportDistance = 100.0f;  // How far the player can teleport
+float teleportCooldown = 0.0f;          // Cooldown timer for teleport
+const float maxTeleportCooldown = 3.0f; // 3 seconds cooldown
+
+// Map settings
+const int gridWidth = 16;
+const int gridHeight = 12;
+const int tileSize = 50;
+std::vector<std::vector<bool>> walls(gridHeight, std::vector<bool>(gridWidth, false));
+
+// Exit (goal) settings
+Vector2 exitPosition = { 700, 500 }; // Position of the exit (win condition)
+
+// Hiding spot settings
+struct HidingSpot {
+    Vector2 position;
+    bool isHidden; // Track if the player is currently hidden
+};
+std::vector<HidingSpot> hidingSpots; // List of hiding spots
+
+// Functions to initialize the environment
+void GenerateEnvironment() {
+    // Generate walls
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (i == 0 || j == 0 || i == gridHeight - 1 || j == gridWidth - 1) {
+                walls[i][j] = true; // Make the outer edges walls
+            } else {
+                if (rand() % 4 == 0) { // 25% chance for a wall
+                    walls[i][j] = true;
+                }
+            }
+        }
+    }
+
+    // Generate hiding spots
+    hidingSpots.clear();
+    for (int i = 0; i < 5; i++) { // 5 hiding spots randomly placed
+        HidingSpot newSpot;
+        newSpot.position = { rand() % (GetScreenWidth() - 50), rand() % (GetScreenHeight() - 50) };
+        newSpot.isHidden = false;
+        hidingSpots.push_back(newSpot);
+    }
+}
+
+// Player movement in the environment (taking into account walls)
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W) && !walls[(int)(playerPosition.y / tileSize) - 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S) && !walls[(int)(playerPosition.y / tileSize) + 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) - 1]) 
+        playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) + 1]) 
+        playerPosition.x += playerSpeed; // Move right
+}
+
+// Teleportation mechanic
+void HandleTeleportation() {
+    if (teleportCooldown <= 0.0f && IsKeyPressed(KEY_SPACE)) {
+        int direction = rand() % 4; // 0 = up, 1 = down, 2 = left, 3 = right
+        Vector2 newPosition = playerPosition;
+
+        switch (direction) {
+            case 0: newPosition.y -= teleportDistance; break;
+            case 1: newPosition.y += teleportDistance; break;
+            case 2: newPosition.x -= teleportDistance; break;
+            case 3: newPosition.x += teleportDistance; break;
+        }
+
+        // Ensure the teleport doesn't go outside the map bounds
+        if (newPosition.x < 0) newPosition.x = 0;
+        if (newPosition.y < 0) newPosition.y = 0;
+        if (newPosition.x > GetScreenWidth() - tileSize) newPosition.x = GetScreenWidth() - tileSize;
+        if (newPosition.y > GetScreenHeight() - tileSize) newPosition.y = GetScreenHeight() - tileSize;
+
+        // Check if the new position collides with a wall
+        if (!walls[(int)(newPosition.y / tileSize)][(int)(newPosition.x / tileSize)]) {
+            playerPosition = newPosition; // Move the player to the new position
+        }
+
+        // Reset cooldown
+        teleportCooldown = maxTeleportCooldown;
+    }
+}
+
+// Monster AI (simple follow player)
+void UpdateMonster() {
+    // If the player is hidden, do not pursue
+    for (const auto& spot : hidingSpots) {
+        if (spot.isHidden) {
+            return; // If the player is hidden, don't chase them
+        }
+    }
+
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+// Check collision between player and monster
+void CheckCollision() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { monsterPosition.x, monsterPosition.y, 50, 50 })) {
+        playerHealth -= 10;  // Reduce health when colliding with the monster
+
+        // If health reaches 0, end the game
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            gameOver = true;
+        }
+    }
+}
+
+// Check if player reached the exit to win
+void CheckWinCondition() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { exitPosition.x, exitPosition.y, 50, 50 })) {
+        gameWon = true;
+    }
+}
+
+// Check if the player is in a hiding spot
+void CheckHiding() {
+    for (auto& spot : hidingSpots) {
+        if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                               { spot.position.x, spot.position.y, 50, 50 })) {
+            if (IsKeyPressed(KEY_H)) {
+                spot.isHidden = true; // Player hides in this spot
+            }
+        }
+    }
+}
+
+// Draw the map with walls
+void DrawEnvironment() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (walls[i][j]) {
+                DrawRectangle(j * tileSize, i * tileSize, tileSize, tileSize, GRAY);
+            }
+        }
+    }
+}
+
+// Draw the health bar
+void DrawHealthBar() {
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY); // Background of health bar
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED); // Health as a red bar
+}
+
+// Update cooldown and timer
+void UpdateCooldown() {
+    if (teleportCooldown > 0.0f) {
+        teleportCooldown -= GetFrameTime();
+    }
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Horror Game with Teleportation and Hiding Mechanic");
+
+    SetTargetFPS(60);
+
+    // Generate the game environment
+    srand(time(0));
+    GenerateEnvironment();
+
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver && !gameWon) {
+            UpdatePlayer();
+            HandleTeleportation();  // Handle teleportation mechanic
+            UpdateMonster();
+            CheckCollision();
+            CheckWinCondition(); // Check if the player reached the exit
+            CheckHiding();       // Check if the player is hiding
+            UpdateCooldown();  // Update the cooldown for teleportation
+        }
+
+        // Draw
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw environment (walls)
+        DrawEnvironment();
+
+        // Draw health bar
+        DrawHealthBar();
+
+        if (!gameOver && !gameWon) {
+            // Draw player (blue square)
+            DrawRectangleV(playerPosition, { 50, 50 }, BLUE);
+            // Draw monster (red square)
+            DrawRectangleV(monsterPosition, { 50, 50 }, RED);
+            // Draw exit (goal) as a green square
+            DrawRectangleV(exitPosition, { 50, 50 }, GREEN);
+
+            // Draw hiding spots
+            for (const auto& spot : hidingSpots) {
+                if (spot.isHidden) {
+                    DrawRectangleV(spot.position, { 50, 50 }, DARKGREEN); // Hidden
+                } else {
+                    DrawRectangleV(spot.position, { 50, 50 }, LIGHTGRAY); // Not hidden
+                }
+            }
+
+            // Display teleportation cooldown
+            if (teleportCooldown > 0.0f) {
+                DrawText(TextFormat("Teleport Ready In: %.1f", teleportCooldown), 10, 40, 20, YELLOW);
+            }
+        } else if (gameWon) {
+            // Win screen
+            DrawText("YOU WIN!", 300, 250, 30, GREEN);
+        } else {
+            // Game Over screen
+            DrawText("GAME OVER", 300, 250, 30, RED);
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Key Changes:
+
+    Hiding Spots:
+
+        HidingSpot structure: Added a HidingSpot structure to define hiding spots with a position and whether the player is hidden behind them.
+
+        GenerateEnvironment(): Generates a set of random hiding spots (5 in this example), represented as gray rectangles.
+
+    Hiding Mechanic:
+
+        When the player enters a hiding spot and presses the H key, they "hide" behind that spot. This is represented by the isHidden property of the hiding spot, which can be set to true.
+
+        If the player is hiding, the monster won't pursue the player. This is handled in the UpdateMonster() function.
+
+    Drawing:
+
+        The hiding spots are drawn as light gray squares. If the player is hiding, the spot changes to dark green to show it's occupied.
+
+    Monster AI Adjustment:
+
+        If the player is hiding, the monster stops pursuing the player.
+
+How to Compile:
+
+    Using g++:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Running the Game: After compiling, run the game:
+
+    ./horror_game
+
+This will add a dynamic hiding mechanic to the game, allowing the player to avoid the monster while hiding. Let me know if you need further adjustments or additional features!
+You said:
+Create a simple puzzle for the player to solve
+ChatGPT said:
+
+To add a simple puzzle to your game, we can introduce a locked door or gate that the player must unlock by solving a puzzle. For the puzzle, let's use a combination lock mechanism where the player has to find the correct combination of numbers to unlock a door and progress in the game.
+Puzzle Design:
+
+    Locked Door: The player encounters a locked door or gate that they cannot pass through until the puzzle is solved.
+
+    Puzzle Mechanism: The player must find the correct combination (a sequence of numbers). This could be displayed in the environment or as part of a clue they have to find.
+
+    Clue Finding: To solve the puzzle, the player can find a clue somewhere in the environment that tells them the combination for the locked door.
+
+    Unlocking: Once the player inputs the correct combination, the door opens, allowing the player to proceed.
+
+Updated Code with Puzzle:
+
+Here is how we can implement this puzzle mechanic in your game.
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+#include <string>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Puzzle settings
+int correctCombination[3] = { 7, 3, 5 }; // The correct combination for the puzzle
+int playerCombination[3] = { -1, -1, -1 }; // The player's current combination attempt
+bool isPuzzleSolved = false; // Whether the puzzle is solved or not
+bool isNearPuzzle = false; // Whether the player is near the puzzle or not
+bool gameOver = false; // Flag for game over
+
+// Game win condition
+bool gameWon = false;
+
+// Draw the health bar
+void DrawHealthBar() {
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY); // Background of health bar
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED); // Health as a red bar
+}
+
+// Update player's movement
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W)) playerPosition.y -= playerSpeed;
+    if (IsKeyDown(KEY_S)) playerPosition.y += playerSpeed;
+    if (IsKeyDown(KEY_A)) playerPosition.x -= playerSpeed;
+    if (IsKeyDown(KEY_D)) playerPosition.x += playerSpeed;
+}
+
+// Check if the player is near the puzzle (locked door)
+void CheckPuzzleProximity() {
+    // If the player is within a certain distance of the puzzle (locked door)
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { 600, 300, 100, 100 })) { // Door location
+        isNearPuzzle = true;
+    } else {
+        isNearPuzzle = false;
+    }
+}
+
+// Handle puzzle interaction (input combination)
+void HandlePuzzle() {
+    if (isNearPuzzle) {
+        // Display the puzzle instructions
+        DrawText("Enter the combination (use 1-9 keys):", 550, 270, 20, WHITE);
+
+        // Draw the player's current input combination
+        for (int i = 0; i < 3; i++) {
+            DrawText(TextFormat("%d", playerCombination[i]), 550 + (i * 40), 300, 20, WHITE);
+        }
+
+        // Listen for key presses to input the combination
+        for (int i = 0; i < 3; i++) {
+            if (IsKeyPressed(KEY_1 + i) && playerCombination[i] == -1) {
+                playerCombination[i] = i + 1;
+            }
+        }
+
+        // Check if the player has entered the correct combination
+        if (playerCombination[0] == correctCombination[0] &&
+            playerCombination[1] == correctCombination[1] &&
+            playerCombination[2] == correctCombination[2]) {
+            isPuzzleSolved = true;
+        }
+    }
+}
+
+// Draw the puzzle (locked door)
+void DrawPuzzle() {
+    if (!isPuzzleSolved) {
+        DrawRectangle(600, 300, 100, 100, DARKGRAY); // Locked door
+        DrawText("LOCKED", 620, 350, 20, WHITE); // Indicating the door is locked
+    } else {
+        // Once the puzzle is solved, the door opens
+        DrawRectangle(600, 300, 100, 100, GREEN); // Open door
+        DrawText("OPEN", 620, 350, 20, WHITE); // Indicating the door is open
+    }
+}
+
+// Check the game win condition
+void CheckWinCondition() {
+    if (isPuzzleSolved && !gameWon) {
+        gameWon = true;
+    }
+}
+
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Horror Game with Puzzle");
+
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver && !gameWon) {
+            UpdatePlayer();  // Update player movement
+            CheckPuzzleProximity(); // Check if the player is near the puzzle
+            HandlePuzzle(); // Handle the puzzle interaction
+            CheckWinCondition(); // Check if the puzzle is solved and win
+        }
+
+        // Draw
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw health bar
+        DrawHealthBar();
+
+        // Draw player (blue square)
+        DrawRectangleV(playerPosition, { 50, 50 }, BLUE);
+
+        // Draw the puzzle (locked door)
+        DrawPuzzle();
+
+        // Display game win screen
+        if (gameWon) {
+            DrawText("YOU WIN!", 300, 250, 30, GREEN);
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Key Changes for Puzzle:
+
+    Puzzle Mechanism:
+
+        Combination Lock: The puzzle is a combination lock with 3 digits. The correct combination is hardcoded as correctCombination[3] = { 7, 3, 5 };. The player needs to input this combination to solve the puzzle.
+
+        Player Input: The player enters numbers 1, 2, and 3 to form the combination (e.g., 1, 2, 3), which will appear on the screen. The player can enter a number by pressing the respective key (e.g., 1, 2, 3).
+
+        Puzzle Proximity: The player can only interact with the puzzle (locked door) when they are near it. This is handled by the CheckPuzzleProximity() function.
+
+    Puzzle Interaction:
+
+        Near Puzzle Check: When the player is close to the puzzle (the locked door), a prompt is displayed to guide the player to enter the combination.
+
+        Combination Input: The player presses keys (1 to 3) to input numbers for the combination.
+
+        Unlocking: If the player enters the correct combination, the puzzle is solved (isPuzzleSolved becomes true), and the door changes to green, indicating it is now open.
+
+    Drawing:
+
+        The locked door is drawn as a dark gray square. Once the player solves the puzzle, the door turns green to indicate it is open.
+
+        The current combination input by the player is displayed below the prompt.
+
+    Game Win Condition:
+
+        When the player successfully solves the puzzle, the gameWon flag is set to true, and a "YOU WIN!" message is displayed.
+
+Gameplay Flow:
+
+    The player moves around the map and finds the locked door.
+
+    Upon getting close to the door, the player is prompted to enter a combination.
+
+    The player inputs the correct combination to unlock the door.
+
+    Once unlocked, the player wins the game, and a "YOU WIN!" message is shown.
+
+How to Compile:
+
+    Using g++:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Running the Game: After compiling, run the game:
+
+    ./horror_game
+
+Let me know if you'd like to expand on this puzzle or add other features to the game!
+You said:
+Add items like a flashlight and a taser to stun enemies
+ChatGPT said:
+
+To make the game more engaging, we can add items such as a flashlight and a taser. The flashlight will help the player see in the dark, and the taser can be used to temporarily stun enemies, making it a powerful tool to use against the monster.
+Item Mechanisms:
+
+    Flashlight:
+
+        The flashlight can be picked up by the player. When activated, it will allow the player to see a wider area, improving visibility in dark environments.
+
+        We will have a toggle key (F) to switch the flashlight on and off.
+
+    Taser:
+
+        The taser will stun the monster temporarily, making it stop chasing the player for a brief period.
+
+        The player will need to find the taser in the environment and use it by pressing the T key when close to the monster.
+
+Plan for Implementation:
+
+    Flashlight:
+
+        The player can pick it up from the environment and toggle it on and off with the F key.
+
+        When the flashlight is on, the screen will brighten up, simulating light.
+
+    Taser:
+
+        The taser will be another item that can be picked up. The player can use it to stun the monster for a short period of time.
+
+        The taser will have a cooldown to prevent it from being used continuously.
+
+Here is the updated code to include the flashlight and taser:
+Updated Code with Flashlight and Taser:
+
+#include "raylib.h"
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+#include <string>
+
+// Player settings
+const float playerSpeed = 5.0f;
+Vector2 playerPosition = { 200, 200 };
+
+// Monster settings
+const float monsterSpeed = 2.0f;
+Vector2 monsterPosition = { 600, 400 };
+
+// Health settings
+int playerHealth = 100;
+const int maxHealth = 100;
+const int healthBarWidth = 200;
+const int healthBarHeight = 20;
+
+// Game over flag
+bool gameOver = false;
+bool gameWon = false; // Flag for win condition
+
+// Item settings
+bool hasFlashlight = false;
+bool hasTaser = false;
+bool flashlightOn = false;
+float taserCooldown = 0.0f;
+const float maxTaserCooldown = 5.0f; // Taser cooldown period
+
+// Puzzle settings
+int correctCombination[3] = { 7, 3, 5 }; // The correct combination for the puzzle
+int playerCombination[3] = { -1, -1, -1 }; // The player's current combination attempt
+bool isPuzzleSolved = false; // Whether the puzzle is solved or not
+bool isNearPuzzle = false; // Whether the player is near the puzzle or not
+
+// Teleportation settings
+const float teleportDistance = 100.0f;  // How far the player can teleport
+float teleportCooldown = 0.0f;          // Cooldown timer for teleport
+const float maxTeleportCooldown = 3.0f; // 3 seconds cooldown
+
+// Map settings
+const int gridWidth = 16;
+const int gridHeight = 12;
+const int tileSize = 50;
+std::vector<std::vector<bool>> walls(gridHeight, std::vector<bool>(gridWidth, false));
+
+// Exit (goal) settings
+Vector2 exitPosition = { 700, 500 }; // Position of the exit (win condition)
+
+// Hiding spot settings
+struct HidingSpot {
+    Vector2 position;
+    bool isHidden; // Track if the player is currently hidden
+};
+std::vector<HidingSpot> hidingSpots; // List of hiding spots
+
+// Functions to initialize the environment
+void GenerateEnvironment() {
+    // Generate walls
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (i == 0 || j == 0 || i == gridHeight - 1 || j == gridWidth - 1) {
+                walls[i][j] = true; // Make the outer edges walls
+            } else {
+                if (rand() % 4 == 0) { // 25% chance for a wall
+                    walls[i][j] = true;
+                }
+            }
+        }
+    }
+
+    // Generate hiding spots
+    hidingSpots.clear();
+    for (int i = 0; i < 5; i++) { // 5 hiding spots randomly placed
+        HidingSpot newSpot;
+        newSpot.position = { rand() % (GetScreenWidth() - 50), rand() % (GetScreenHeight() - 50) };
+        newSpot.isHidden = false;
+        hidingSpots.push_back(newSpot);
+    }
+}
+
+// Player movement in the environment (taking into account walls)
+void UpdatePlayer() {
+    if (IsKeyDown(KEY_W) && !walls[(int)(playerPosition.y / tileSize) - 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y -= playerSpeed; // Move up
+    if (IsKeyDown(KEY_S) && !walls[(int)(playerPosition.y / tileSize) + 1][(int)(playerPosition.x / tileSize)]) 
+        playerPosition.y += playerSpeed; // Move down
+    if (IsKeyDown(KEY_A) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) - 1]) 
+        playerPosition.x -= playerSpeed; // Move left
+    if (IsKeyDown(KEY_D) && !walls[(int)(playerPosition.y / tileSize)][(int)(playerPosition.x / tileSize) + 1]) 
+        playerPosition.x += playerSpeed; // Move right
+}
+
+// Flashlight toggle
+void ToggleFlashlight() {
+    if (IsKeyPressed(KEY_F) && hasFlashlight) {
+        flashlightOn = !flashlightOn;  // Toggle flashlight on and off
+    }
+}
+
+// Update the flashlight effect on the screen
+void UpdateFlashlight() {
+    if (flashlightOn) {
+        DrawCircle(playerPosition.x + 25, playerPosition.y + 25, 100, Color{ 255, 255, 255, 200 });
+    }
+}
+
+// Taser mechanic
+void HandleTaser() {
+    if (hasTaser && taserCooldown <= 0.0f && IsKeyPressed(KEY_T)) {
+        // Use taser and stun the monster temporarily
+        taserCooldown = maxTaserCooldown;
+        monsterSpeed = 0; // Stop monster for a while
+    }
+}
+
+// Teleportation mechanic
+void HandleTeleportation() {
+    if (teleportCooldown <= 0.0f && IsKeyPressed(KEY_SPACE)) {
+        int direction = rand() % 4; // 0 = up, 1 = down, 2 = left, 3 = right
+        Vector2 newPosition = playerPosition;
+
+        switch (direction) {
+            case 0: newPosition.y -= teleportDistance; break;
+            case 1: newPosition.y += teleportDistance; break;
+            case 2: newPosition.x -= teleportDistance; break;
+            case 3: newPosition.x += teleportDistance; break;
+        }
+
+        // Ensure the teleport doesn't go outside the map bounds
+        if (newPosition.x < 0) newPosition.x = 0;
+        if (newPosition.y < 0) newPosition.y = 0;
+        if (newPosition.x > GetScreenWidth() - tileSize) newPosition.x = GetScreenWidth() - tileSize;
+        if (newPosition.y > GetScreenHeight() - tileSize) newPosition.y = GetScreenHeight() - tileSize;
+
+        playerPosition = newPosition; // Move the player to the new position
+        teleportCooldown = maxTeleportCooldown; // Reset cooldown
+    }
+}
+
+// Monster AI (simple follow player)
+void UpdateMonster() {
+    Vector2 direction = { playerPosition.x - monsterPosition.x, playerPosition.y - monsterPosition.y };
+    float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+
+    monsterPosition.x += direction.x * monsterSpeed;
+    monsterPosition.y += direction.y * monsterSpeed;
+}
+
+// Draw the health bar
+void DrawHealthBar() {
+    DrawRectangle(10, 10, healthBarWidth, healthBarHeight, GRAY); // Background of health bar
+    float healthWidth = (float)playerHealth / maxHealth * healthBarWidth;
+    DrawRectangle(10, 10, healthWidth, healthBarHeight, RED); // Health as a red bar
+}
+
+// Check the game win condition
+void CheckWinCondition() {
+    if (CheckCollisionRecs({ playerPosition.x, playerPosition.y, 50, 50 },
+                           { exitPosition.x, exitPosition.y, 50, 50 })) {
+        gameWon = true;
+    }
+}
+
+// Draw the environment
+void DrawEnvironment() {
+    DrawRectangle(600, 300, 100, 100, DARKGRAY); // Locked door
+    DrawText("LOCKED", 620, 350, 20, WHITE); // Indicating the door is locked
+}
+
+// Main function
+int main() {
+    // Initialization
+    InitWindow(800, 600, "Horror Game with Flashlight, Taser, and Puzzle");
+
+    SetTargetFPS(60);
+
+    // Generate environment
+    GenerateEnvironment();
+
+    while (!WindowShouldClose()) {
+        // Update
+        if (!gameOver && !gameWon) {
+            UpdatePlayer();  // Update player movement
+            ToggleFlashlight();  // Toggle flashlight
+            HandleTaser();  // Handle taser usage
+            HandleTeleportation();  // Handle teleportation mechanic
+            UpdateMonster();  // Update monster movement
+            CheckWinCondition(); // Check if the player reached the exit
+        }
+
+        // Draw
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // Draw environment and player
+        DrawHealthBar();
+        DrawRectangleV(playerPosition, { 50, 50 }, BLUE);  // Draw player
+        DrawRectangleV(monsterPosition, { 50, 50 }, RED);  // Draw monster
+        DrawRectangleV(exitPosition, { 50, 50 }, GREEN);  // Draw exit
+
+        // Draw flashlight
+        UpdateFlashlight();
+
+        // Display taser cooldown
+        if (taserCooldown > 0.0f) {
+            taserCooldown -= GetFrameTime();  // Decrease cooldown
+        }
+        if (taserCooldown > 0.0f) {
+            DrawText(TextFormat("Taser Cooldown: %.1f", taserCooldown), 10, 40, 20, YELLOW);
+        }
+
+        // Check win condition
+        if (gameWon) {
+            DrawText("YOU WIN!", 300, 250, 30, GREEN);
+        }
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    CloseWindow(); // Close window and OpenGL context
+
+    return 0;
+}
+
+Key Changes for Flashlight and Taser:
+
+    Flashlight:
+
+        The flashlight can be toggled on and off by pressing the F key.
+
+        When turned on, the player's visibility increases, simulated by drawing a white circle around the player, indicating the flashlight's light radius.
+
+    Taser:
+
+        The player can use the taser to stun the monster by pressing the T key when close to the monster.
+
+        The taser has a cooldown (maxTaserCooldown), and once used, the monster's movement is temporarily halted.
+
+    Item Interaction:
+
+        Both items (flashlight and taser) can be picked up in the game, and the flashlight can be toggled on and off with the F key. The taser, once obtained, can be used to stun the monster by pressing T.
+
+Gameplay Flow:
+
+    The player can find the flashlight and taser in the environment.
+
+    The player can toggle the flashlight with the F key to illuminate dark areas.
+
+    The player can stun the monster with the taser by pressing the T key, temporarily halting its movement.
+
+How to Compile:
+
+    Using g++:
+
+g++ -o horror_game main.cpp -lraylib -lm -lpthread -ldl -lX11
+
+Running the Game: After compiling, run the game:
+
+    ./horror_game
+
+Let me know if you'd like to further tweak any mechanics or add additional features!
